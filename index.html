@@ -169,8 +169,8 @@
             playBtn.style.background = '#6366f1';
         });
 
-        // 載入歌詞
-        fetch('lyrics.lrc')
+        // 載入歌詞 (加入 cache-busting 確保總是抓到最新版)
+        fetch('lyrics.lrc?v=' + new Date().getTime())
             .then(res => {
                 if (!res.ok) throw new Error('Network response was not ok');
                 return res.text();
