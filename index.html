@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎤 初業專屬法規 KTV</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #818cf8;
+        }
+        .lyrics-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 50vh 20px 50vh 20px;
+            scroll-behavior: smooth;
+        }
+        .lyric-line {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #64748b;
+            text-align: center;
+            margin: 20px 0;
+            transition: color 0.3s, transform 0.3s;
+            cursor: pointer;
+        }
+        .lyric-line.active {
+            color: #10b981;
+            transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        .player-container {
+            padding: 20px;
+            background: rgba(0,0,0,0.8);
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: center;
+        }
+        audio {
+            width: 100%;
+            max-width: 500px;
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎤 上市上櫃的門檻 KTV</h1>
+    </div>
+
+    <div class="lyrics-container" id="lyrics"></div>
+
+    <div class="player-container">
+        <audio id="audio" controls>
+            <source src="song.mp3" type="audio/mpeg">
+            您的瀏覽器不支援音樂播放。
+        </audio>
+    </div>
+
+    <script>
+        // 載入歌詞
+        fetch('lyrics.lrc')
+            .then(res => res.text())
+            .then(text => {
+                parseLRC(text);
+            });
+
+        let lyricsData = [];
+        function parseLRC(lrc) {
+            const lines = lrc.split('\n');
+            const regex = /\[(\d+):(\d+\.\d+)\](.*)/;
+            
+            lines.forEach(line => {
+                const match = regex.exec(line);
+                if (match) {
+                    const mins = parseInt(match[1]);
+                    const secs = parseFloat(match[2]);
+                    const text = match[3].trim();
+                    if (text) {
+                        lyricsData.push({ time: mins * 60 + secs, text: text });
+                    }
+                }
+            });
+            
+            renderLyrics();
+        }
+
+        function renderLyrics() {
+            const container = document.getElementById('lyrics');
+            lyricsData.forEach((line, index) => {
+                const el = document.createElement('div');
+                el.className = 'lyric-line';
+                el.innerText = line.text;
+                el.id = 'line-' + index;
+                el.onclick = () => {
+                    document.getElementById('audio').currentTime = line.time;
+                    document.getElementById('audio').play();
+                };
+                container.appendChild(el);
+            });
+        }
+
+        const audio = document.getElementById('audio');
+        let currentIndex = -1;
+
+        audio.addEventListener('timeupdate', () => {
+            const time = audio.currentTime;
+            
+            // 尋找當前應該高光的歌詞
+            let newIndex = -1;
+            for (let i = 0; i < lyricsData.length; i++) {
+                if (time >= lyricsData[i].time) {
+                    newIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (newIndex !== currentIndex && newIndex !== -1) {
+                if (currentIndex !== -1) {
+                    document.getElementById('line-' + currentIndex).classList.remove('active');
+                }
+                currentIndex = newIndex;
+                const activeEl = document.getElementById('line-' + currentIndex);
+                activeEl.classList.add('active');
+                
+                // 自動滾動置中
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    </script>
+</body>
+</html>
