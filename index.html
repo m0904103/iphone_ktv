@@ -183,8 +183,8 @@
             });
 
         function parseLRC(lrc) {
-            const lines = lrc.split('\\n');
-            const regex = /\\[(\\d+):(\\d+\\.\\d+)\\](.*)/;
+            const lines = lrc.split('\n');
+            const regex = /\[(\d+):(\d+\.\d+)\](.*)/;
             
             lines.forEach(line => {
                 const match = regex.exec(line);
